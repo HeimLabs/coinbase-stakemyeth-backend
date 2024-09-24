@@ -1,2 +1,2 @@
 export { errorHandler, healthCheck, notFound } from "./helpers.controllers";
-export { getStakeableBalance, buildStakeTransactions } from "./wallet.controllers";
+export { getBalances, buildStakeTransactions } from "./wallet.controllers";

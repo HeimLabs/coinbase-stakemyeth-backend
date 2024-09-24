@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getStakeableBalance, buildStakeTransactions } from "../controllers";
+import { getBalances, buildStakeTransactions } from "../controllers";
 
 const walletRouter = Router();
 
-walletRouter.get("/stakeable-balance", getStakeableBalance);
+walletRouter.get("/balances", getBalances);
 walletRouter.post("/stake/build", buildStakeTransactions);
 
 export default walletRouter;

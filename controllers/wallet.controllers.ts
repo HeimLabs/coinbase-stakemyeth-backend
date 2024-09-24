@@ -6,7 +6,7 @@ import { CB_MODE, CHAIN_NETWORK } from "../config";
 
 // @todo - DEDICATED_STAKE_ACTIVE env setup
 
-export async function getStakeableBalance(req: GetStakeableBalanceRequest, res: Response, next: NextFunction) {
+export async function getBalances(req: GetStakeableBalanceRequest, res: Response, next: NextFunction) {
     try {
         const { address, chainId, mode } = req.body;
         const network = CHAIN_NETWORK[chainId];
@@ -17,8 +17,10 @@ export async function getStakeableBalance(req: GetStakeableBalanceRequest, res: 
 
         const walletAddress = new ExternalAddress(network, address);
         const stakeableBalance = await walletAddress.stakeableBalance(Coinbase.assets.Eth, stakeMode);
+        const unstakeableBalance = await walletAddress.unstakeableBalance(Coinbase.assets.Eth, stakeMode);
+        const claimableBalance = await walletAddress.claimableBalance(Coinbase.assets.Eth, stakeMode);
 
-        return res.status(200).json({ stakeableBalance });
+        return res.status(200).json({ stakeableBalance, unstakeableBalance, claimableBalance });
     } catch (error) {
         console.error(`[controllers/wallet/getStakeableBalance] Failed to get stakeable balance`);
         console.error(error);
