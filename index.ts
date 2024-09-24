@@ -10,6 +10,8 @@ const start = async () => {
     app = middlewares(app);
     app.use(router);
 
+    coinbase.setupCoinbase();
+
     app.listen(process.env.PORT || 5000, async () => {
         try {
             console.log(`🚀 Server running on port ${process.env.PORT || 5000}`);
