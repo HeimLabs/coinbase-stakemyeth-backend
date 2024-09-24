@@ -12,10 +12,10 @@ export type GetStakeableBalanceBody = {
 };
 export type GetStakeableBalanceRequest = Request<{}, {}, GetStakeableBalanceBody>;
 
-export type GetStakeTransactionBody = {
+export type BuildTransactionBody = {
     address: string,
     chainId: number,
     mode: "shared" | "dedicated",
     amount: number
 };
-export type GetStakeTransactionRequest = Request<{}, {}, GetStakeTransactionBody>;
+export type BuildTransactionRequest = Request<{}, {}, BuildTransactionBody>;

@@ -1,1 +1,1 @@
-export { NODE_ENV, Status, GetStakeableBalanceBody, GetStakeableBalanceRequest, GetStakeTransactionBody, GetStakeTransactionRequest } from "./api.types";
+export { NODE_ENV, Status, GetStakeableBalanceBody, GetStakeableBalanceRequest, BuildTransactionBody, BuildTransactionRequest } from "./api.types";
