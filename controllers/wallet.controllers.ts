@@ -1,12 +1,12 @@
 import { NextFunction, Response } from "express";
 import AppError from "../utils/appError";
-import { Coinbase, ExternalAddress, StakeOptionsMode } from "@coinbase/coinbase-sdk";
-import { GetStakeableBalanceRequest, BuildTransactionRequest } from "../types";
+import { Coinbase, ExternalAddress, StakeOptionsMode, StakingReward, Validator } from "@coinbase/coinbase-sdk";
+import { GetBalancesRequest, GetRewardsRequest, BuildTransactionRequest } from "../types";
 import { CB_MODE, CHAIN_NETWORK } from "../config";
 
 // @todo - DEDICATED_STAKE_ACTIVE env setup
 
-export async function getBalances(req: GetStakeableBalanceRequest, res: Response, next: NextFunction) {
+export async function getBalances(req: GetBalancesRequest, res: Response, next: NextFunction) {
     try {
         const { address, chainId, mode } = req.body;
         const network = CHAIN_NETWORK[chainId];
@@ -22,7 +22,43 @@ export async function getBalances(req: GetStakeableBalanceRequest, res: Response
 
         return res.status(200).json({ stakeableBalance, unstakeableBalance, claimableBalance });
     } catch (error) {
-        console.error(`[controllers/wallet/getStakeableBalance] Failed to get stakeable balance`);
+        console.error(`[controllers/wallet/getBalances] Failed to get balances`);
+        console.error(error);
+        next(error);
+    }
+}
+
+export async function getRewards(req: GetRewardsRequest, res: Response, next: NextFunction) {
+    try {
+        const { addresses, chainId, mode, days } = req.body;
+        const network = CHAIN_NETWORK[chainId];
+        const stakeMode = CB_MODE[mode];
+
+        if (!addresses || addresses.length == 0 || !network || !stakeMode || !days)
+            throw new AppError(400, "error", "Invalid request");
+
+        let stakingRewards: StakingReward[] = [];
+
+        let to = new Date();
+        let from = new Date();
+        from.setDate(to.getDate() - days);
+
+        if (stakeMode == StakeOptionsMode.PARTIAL) {
+            const walletAddress = new ExternalAddress(network, addresses[0]);
+            stakingRewards = await walletAddress
+                .stakingRewards(Coinbase.assets.Eth, from.toISOString(), to.toISOString());
+        }
+        else if (stakeMode == StakeOptionsMode.NATIVE) {
+            const validators = (await Validator.list(network, Coinbase.assets.Eth)).map((v) => v.getValidatorId());
+            stakingRewards = await StakingReward
+                .list(network, Coinbase.assets.Eth, validators, from.toISOString(), to.toISOString());
+            const walletAddress = new ExternalAddress(network, addresses[0]);
+            stakingRewards = await walletAddress.stakingRewards(Coinbase.assets.Eth, stakeMode);
+        }
+
+        return res.status(200).json({ stakingRewards });
+    } catch (error) {
+        console.error(`[controllers/wallet/getRewards] Failed to get rewards`);
         console.error(error);
         next(error);
     }
