@@ -11,3 +11,11 @@ export type GetStakeableBalanceBody = {
     mode: "shared" | "dedicated"
 };
 export type GetStakeableBalanceRequest = Request<{}, {}, GetStakeableBalanceBody>;
+
+export type GetStakeTransactionBody = {
+    address: string,
+    chainId: number,
+    mode: "shared" | "dedicated",
+    amount: number
+};
+export type GetStakeTransactionRequest = Request<{}, {}, GetStakeTransactionBody>;
