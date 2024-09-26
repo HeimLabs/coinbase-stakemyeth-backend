@@ -20,6 +20,12 @@ export type GetRewardsBody = {
 };
 export type GetRewardsRequest = Request<{}, {}, GetRewardsBody>;
 
+export type GetValidatorsBody = {
+    address: string,
+    chainId: number,
+};
+export type GetValidatorsRequest = Request<{}, {}, GetValidatorsBody>;
+
 export type BuildTransactionBody = {
     address: string,
     chainId: number,

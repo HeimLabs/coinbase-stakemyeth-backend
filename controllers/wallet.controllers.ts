@@ -1,7 +1,7 @@
 import { NextFunction, Response } from "express";
 import AppError from "../utils/appError";
 import { Coinbase, ExternalAddress, StakeOptionsMode, StakingReward, Validator } from "@coinbase/coinbase-sdk";
-import { GetBalancesRequest, GetRewardsRequest, BuildTransactionRequest } from "../types";
+import { GetBalancesRequest, GetRewardsRequest, BuildTransactionRequest, GetValidatorsRequest } from "../types";
 import { CB_MODE, CHAIN_NETWORK } from "../config";
 
 // @todo - DEDICATED_STAKE_ACTIVE env setup
@@ -59,6 +59,24 @@ export async function getRewards(req: GetRewardsRequest, res: Response, next: Ne
         return res.status(200).json({ stakingRewards });
     } catch (error) {
         console.error(`[controllers/wallet/getRewards] Failed to get rewards`);
+        console.error(error);
+        next(error);
+    }
+}
+
+export async function getValidators(req: GetValidatorsRequest, res: Response, next: NextFunction) {
+    try {
+        const { address, chainId } = req.body;
+        const network = CHAIN_NETWORK[chainId];
+
+        if (!address || !network)
+            throw new AppError(400, "error", "Invalid request");
+
+        const validators = await Validator.list(network, Coinbase.assets.Eth);
+
+        return res.status(200).json({ validators });
+    } catch (error) {
+        console.error(`[controllers/wallet/getValidators] Failed to get validators`);
         console.error(error);
         next(error);
     }
