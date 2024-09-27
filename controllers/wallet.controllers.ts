@@ -1,14 +1,14 @@
 import { NextFunction, Response } from "express";
 import AppError from "../utils/appError";
 import { Coinbase, ExternalAddress, StakeOptionsMode, StakingReward, Validator } from "@coinbase/coinbase-sdk";
-import { GetBalancesRequest, GetRewardsRequest, BuildTransactionRequest, GetValidatorsRequest } from "../types";
+import { GetBalancesRequest, GetRewardsRequest, BuildTransactionRequest, GetValidatorsRequest, App_StakingReward, App_Validator } from "../types";
 import { CB_MODE, CHAIN_NETWORK } from "../config";
 
 // @todo - DEDICATED_STAKE_ACTIVE env setup
 
 export async function getBalances(req: GetBalancesRequest, res: Response, next: NextFunction) {
     try {
-        const { address, chainId, mode } = req.body;
+        const { address, chainId, mode } = req.query;
         const network = CHAIN_NETWORK[chainId];
         const stakeMode = CB_MODE[mode];
 
@@ -30,14 +30,14 @@ export async function getBalances(req: GetBalancesRequest, res: Response, next: 
 
 export async function getRewards(req: GetRewardsRequest, res: Response, next: NextFunction) {
     try {
-        const { addresses, chainId, mode, days } = req.body;
+        const { addresses, chainId, mode, days } = req.query;
         const network = CHAIN_NETWORK[chainId];
         const stakeMode = CB_MODE[mode];
 
         if (!addresses || addresses.length == 0 || !network || !stakeMode || !days)
             throw new AppError(400, "error", "Invalid request");
 
-        let stakingRewards: StakingReward[] = [];
+        let stakingRewards: StakingReward[] | App_StakingReward[] = [];
 
         let to = new Date();
         let from = new Date();
@@ -56,6 +56,13 @@ export async function getRewards(req: GetRewardsRequest, res: Response, next: Ne
             stakingRewards = await walletAddress.stakingRewards(Coinbase.assets.Eth, stakeMode);
         }
 
+        stakingRewards = (stakingRewards as StakingReward[]).map((reward) => ({
+            date: reward.date(),
+            address: reward.addressId(),
+            amount: Number(reward.amount().toString()),
+            usdValue: Number(reward.usdValue().toString())
+        }));
+
         return res.status(200).json({ stakingRewards });
     } catch (error) {
         console.error(`[controllers/wallet/getRewards] Failed to get rewards`);
@@ -66,13 +73,18 @@ export async function getRewards(req: GetRewardsRequest, res: Response, next: Ne
 
 export async function getValidators(req: GetValidatorsRequest, res: Response, next: NextFunction) {
     try {
-        const { address, chainId } = req.body;
+        const { address, chainId } = req.query;
         const network = CHAIN_NETWORK[chainId];
 
         if (!address || !network)
             throw new AppError(400, "error", "Invalid request");
 
-        const validators = await Validator.list(network, Coinbase.assets.Eth);
+        let validators: Validator[] | App_Validator[] = await Validator.list(network, Coinbase.assets.Eth);
+
+        validators = validators.map((validator) => ({
+            id: validator.getValidatorId(),
+            status: validator.getStatus()
+        }));
 
         return res.status(200).json({ validators });
     } catch (error) {
@@ -99,9 +111,9 @@ export async function buildStakeTransactions(req: BuildTransactionRequest, res: 
             await stakeOperation.wait();
         }
 
-        const stakeTransactions = stakeOperation.getTransactions().map((tx) => tx.rawTransaction());
+        const transactions = stakeOperation.getTransactions().map((tx) => tx.rawTransaction().toJSON());
 
-        return res.status(200).json({ stakeTransactions });
+        return res.status(200).json({ transactions });
     } catch (error) {
         console.error(`[controllers/wallet/buildStakeTransactions] Failed to build stake transactions`);
         console.error(error);
@@ -127,9 +139,9 @@ export async function buildUnstakeTransactions(req: BuildTransactionRequest, res
             return res.status(200).json("Unstake successful!");
         }
 
-        const unstakeTransactions = unstakeOperation.getTransactions().map((tx) => tx.rawTransaction());
+        const transactions = unstakeOperation.getTransactions().map((tx) => tx.rawTransaction().toJSON());
 
-        return res.status(200).json({ unstakeTransactions });
+        return res.status(200).json({ transactions });
     } catch (error) {
         console.error(`[controllers/wallet/buildUnstakeTransactions] Failed to build unstake transactions`);
         console.error(error);
@@ -149,9 +161,9 @@ export async function buildClaimTransactions(req: BuildTransactionRequest, res: 
 
         const claimOperation = await walletAddress.buildClaimStakeOperation(amount, Coinbase.assets.Eth, StakeOptionsMode.PARTIAL);
 
-        const claimTransactions = claimOperation.getTransactions().map((tx) => tx.rawTransaction());
+        const transactions = claimOperation.getTransactions().map((tx) => tx.rawTransaction().toJSON());
 
-        return res.status(200).json({ claimTransactions });
+        return res.status(200).json({ transactions });
     } catch (error) {
         console.error(`[controllers/wallet/buildClaimTransactions] Failed to build claim transactions`);
         console.error(error);

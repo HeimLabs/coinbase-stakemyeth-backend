@@ -1,1 +1,1 @@
-export { NODE_ENV, Status, GetBalancesBody, GetBalancesRequest, GetRewardsBody, GetRewardsRequest, GetValidatorsBody, GetValidatorsRequest, BuildTransactionBody, BuildTransactionRequest } from "./api.types";
+export { NODE_ENV, Status, App_StakingReward, App_Validator, GetBalancesQuery, GetBalancesRequest, GetRewardsQuery, GetRewardsRequest, GetValidatorsQuery, GetValidatorsRequest, BuildTransactionBody, BuildTransactionRequest } from "./api.types";

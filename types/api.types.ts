@@ -1,30 +1,41 @@
-import { StakeOptionsMode } from "@coinbase/coinbase-sdk";
 import { Request } from "express";
 
 export type NODE_ENV = "development" | "production";
 
 export type Status = "idle" | "loading" | "success" | "fail" | "error";
 
-export type GetBalancesBody = {
+export type App_StakingReward = {
+    date: Date,
+    address: string,
+    amount: number,
+    usdValue: number
+}
+
+export type App_Validator = {
+    id: string,
+    status: string,
+}
+
+export type GetBalancesQuery = {
     address: string,
     chainId: number,
     mode: "shared" | "dedicated"
 };
-export type GetBalancesRequest = Request<{}, {}, GetBalancesBody>;
+export type GetBalancesRequest = Request<{}, {}, {}, GetBalancesQuery>;
 
-export type GetRewardsBody = {
+export type GetRewardsQuery = {
     addresses: string[],
     chainId: number,
     mode: "shared" | "dedicated",
     days: number
 };
-export type GetRewardsRequest = Request<{}, {}, GetRewardsBody>;
+export type GetRewardsRequest = Request<{}, {}, {}, GetRewardsQuery>;
 
-export type GetValidatorsBody = {
+export type GetValidatorsQuery = {
     address: string,
     chainId: number,
 };
-export type GetValidatorsRequest = Request<{}, {}, GetValidatorsBody>;
+export type GetValidatorsRequest = Request<{}, {}, {}, GetValidatorsQuery>;
 
 export type BuildTransactionBody = {
     address: string,

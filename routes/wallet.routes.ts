@@ -4,7 +4,7 @@ import { getBalances, getRewards, getValidators, buildStakeTransactions, buildUn
 const walletRouter = Router();
 
 walletRouter.get("/balances", getBalances);
-walletRouter.get("/rewards", getBalances);
+walletRouter.get("/rewards", getRewards);
 walletRouter.get("/validators", getValidators);
 walletRouter.post("/stake", buildStakeTransactions);
 walletRouter.post("/unstake", buildUnstakeTransactions);
