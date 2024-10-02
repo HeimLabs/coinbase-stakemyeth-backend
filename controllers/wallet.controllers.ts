@@ -1,6 +1,6 @@
 import { NextFunction, Response } from "express";
 import AppError from "../utils/appError";
-import { Coinbase, ExternalAddress, StakeOptionsMode, StakingReward, Validator } from "@coinbase/coinbase-sdk";
+import { Coinbase, ExternalAddress, StakeOptionsMode, StakingReward, StakingRewardFormat, Validator } from "@coinbase/coinbase-sdk";
 import { GetBalancesRequest, GetRewardsRequest, BuildTransactionRequest, GetValidatorsRequest, App_StakingReward, App_Validator } from "../types";
 import { CB_MODE, CHAIN_NETWORK } from "../config";
 
@@ -30,11 +30,11 @@ export async function getBalances(req: GetBalancesRequest, res: Response, next: 
 
 export async function getRewards(req: GetRewardsRequest, res: Response, next: NextFunction) {
     try {
-        const { addresses, chainId, mode, days } = req.query;
+        const { address, chainId, mode, days } = req.query;
         const network = CHAIN_NETWORK[chainId];
         const stakeMode = CB_MODE[mode];
 
-        if (!addresses || addresses.length == 0 || !network || !stakeMode || !days)
+        if (!address || !network || !stakeMode || !days)
             throw new AppError(400, "error", "Invalid request");
 
         let stakingRewards: StakingReward[] | App_StakingReward[] = [];
@@ -44,16 +44,14 @@ export async function getRewards(req: GetRewardsRequest, res: Response, next: Ne
         from.setDate(to.getDate() - days);
 
         if (stakeMode == StakeOptionsMode.PARTIAL) {
-            const walletAddress = new ExternalAddress(network, addresses[0]);
+            const walletAddress = new ExternalAddress(network, address);
             stakingRewards = await walletAddress
-                .stakingRewards(Coinbase.assets.Eth, from.toISOString(), to.toISOString());
+                .stakingRewards(Coinbase.assets.Eth, from.toISOString(), to.toISOString(), StakingRewardFormat.NATIVE);
         }
         else if (stakeMode == StakeOptionsMode.NATIVE) {
             const validators = (await Validator.list(network, Coinbase.assets.Eth)).map((v) => v.getValidatorId());
             stakingRewards = await StakingReward
                 .list(network, Coinbase.assets.Eth, validators, from.toISOString(), to.toISOString());
-            const walletAddress = new ExternalAddress(network, addresses[0]);
-            stakingRewards = await walletAddress.stakingRewards(Coinbase.assets.Eth, stakeMode);
         }
 
         stakingRewards = (stakingRewards as StakingReward[]).map((reward) => ({
@@ -73,17 +71,17 @@ export async function getRewards(req: GetRewardsRequest, res: Response, next: Ne
 
 export async function getValidators(req: GetValidatorsRequest, res: Response, next: NextFunction) {
     try {
-        const { address, chainId } = req.query;
+        const { chainId } = req.query;
         const network = CHAIN_NETWORK[chainId];
 
-        if (!address || !network)
+        if (!network)
             throw new AppError(400, "error", "Invalid request");
 
         let validators: Validator[] | App_Validator[] = await Validator.list(network, Coinbase.assets.Eth);
 
         validators = validators.map((validator) => ({
             id: validator.getValidatorId(),
-            status: validator.getStatus()
+            status: validator.getStatus(),
         }));
 
         return res.status(200).json({ validators });

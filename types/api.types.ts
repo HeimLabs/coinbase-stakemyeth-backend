@@ -24,7 +24,7 @@ export type GetBalancesQuery = {
 export type GetBalancesRequest = Request<{}, {}, {}, GetBalancesQuery>;
 
 export type GetRewardsQuery = {
-    addresses: string[],
+    address: string,
     chainId: number,
     mode: "shared" | "dedicated",
     days: number
@@ -32,7 +32,6 @@ export type GetRewardsQuery = {
 export type GetRewardsRequest = Request<{}, {}, {}, GetRewardsQuery>;
 
 export type GetValidatorsQuery = {
-    address: string,
     chainId: number,
 };
 export type GetValidatorsRequest = Request<{}, {}, {}, GetValidatorsQuery>;
