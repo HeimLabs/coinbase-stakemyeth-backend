@@ -2,7 +2,8 @@ import { NextFunction, Response } from "express";
 import AppError from "../utils/appError";
 import { Coinbase, ExternalAddress, StakeOptionsMode, StakingReward, StakingRewardFormat, Validator } from "@coinbase/coinbase-sdk";
 import { GetBalancesRequest, GetRewardsRequest, BuildTransactionRequest, GetValidatorsRequest, App_StakingReward, App_Validator } from "../types";
-import { CB_MODE, CHAIN_NETWORK } from "../config";
+import { CB_MODE, CHAIN_NETWORK, CHAIN_RPC } from "../config";
+import axios from "axios";
 
 // @todo - DEDICATED_STAKE_ACTIVE env setup
 
@@ -130,10 +131,29 @@ export async function buildUnstakeTransactions(req: BuildTransactionRequest, res
 
         const walletAddress = new ExternalAddress(network, address);
 
-        const unstakeOperation = await walletAddress.buildUnstakeOperation(amount, Coinbase.assets.Eth, stakeMode);
+        const unstakeOperation =
+            await walletAddress.buildUnstakeOperation(
+                amount,
+                Coinbase.assets.Eth,
+                stakeMode,
+                // @review - SDK fix required
+                // { "immediate": "true" }
+            );
 
         if (stakeMode == StakeOptionsMode.NATIVE) {
             await unstakeOperation.wait();
+            const rpc = CHAIN_RPC[chainId];
+
+            console.log("unstakeOperation: ", unstakeOperation.toString());
+            console.log("unstakeOperation.getSignedVoluntaryExitMessages(): ", unstakeOperation.getSignedVoluntaryExitMessages());
+
+            const exitMessages = unstakeOperation.getSignedVoluntaryExitMessages();
+
+            for await (const signedVoluntaryExitMessage of exitMessages) {
+                let resp = await axios.post(`${rpc}/eth/v1/beacon/pool/voluntary_exits`, signedVoluntaryExitMessage)
+                console.log(resp.status);
+            }
+
             return res.status(200).json("Unstake successful!");
         }
 
