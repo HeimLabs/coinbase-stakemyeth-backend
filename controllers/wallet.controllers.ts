@@ -102,6 +102,9 @@ export async function buildStakeTransactions(req: BuildTransactionRequest, res: 
         if (!address || !network || !stakeMode || !amount)
             throw new AppError(400, "error", "Invalid request");
 
+        if(process.env.DEDICATED_ENABLED!="true" && stakeMode === StakeOptionsMode.NATIVE)
+            throw new AppError(400, "error", "Dedicated mode disabled");
+
         const walletAddress = new ExternalAddress(network, address);
 
         const stakeOperation = await walletAddress.buildStakeOperation(amount, Coinbase.assets.Eth, stakeMode);
@@ -128,6 +131,9 @@ export async function buildUnstakeTransactions(req: BuildTransactionRequest, res
 
         if (!address || !network || !stakeMode || !amount)
             throw new AppError(400, "error", "Invalid request");
+
+        if(process.env.DEDICATED_ENABLED!="true" && stakeMode === StakeOptionsMode.NATIVE)
+            throw new AppError(400, "error", "Dedicated mode disabled");
 
         const walletAddress = new ExternalAddress(network, address);
 
@@ -160,9 +166,11 @@ export async function buildUnstakeTransactions(req: BuildTransactionRequest, res
         const transactions = unstakeOperation.getTransactions().map((tx) => tx.rawTransaction().toJSON());
 
         return res.status(200).json({ transactions });
-    } catch (error) {
+    } catch (error: any) {
         console.error(`[controllers/wallet/buildUnstakeTransactions] Failed to build unstake transactions`);
         console.error(error);
+        if (error.message)
+            console.error(error.message);
         next(error);
     }
 }
