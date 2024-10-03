@@ -142,23 +142,19 @@ export async function buildUnstakeTransactions(req: BuildTransactionRequest, res
                 amount,
                 Coinbase.assets.Eth,
                 stakeMode,
-                // @review - SDK fix required
-                // { "immediate": "true" }
+                { "immediate": "true" }
             );
 
         if (stakeMode == StakeOptionsMode.NATIVE) {
             await unstakeOperation.wait();
-            const rpc = CHAIN_RPC[chainId];
 
-            console.log("unstakeOperation: ", unstakeOperation.toString());
-            console.log("unstakeOperation.getSignedVoluntaryExitMessages(): ", unstakeOperation.getSignedVoluntaryExitMessages());
-
-            const exitMessages = unstakeOperation.getSignedVoluntaryExitMessages();
-
-            for await (const signedVoluntaryExitMessage of exitMessages) {
-                let resp = await axios.post(`${rpc}/eth/v1/beacon/pool/voluntary_exits`, signedVoluntaryExitMessage)
-                console.log(resp.status);
-            }
+            // @dev - User managed unstake broadcasting
+            // const rpc = CHAIN_RPC[chainId];
+            // const exitMessages = unstakeOperation.getSignedVoluntaryExitMessages();
+            // for await (const signedVoluntaryExitMessage of exitMessages) {
+            //     let resp = await axios.post(`${rpc}/eth/v1/beacon/pool/voluntary_exits`, signedVoluntaryExitMessage)
+            //     console.log(resp.status);
+            // }
 
             return res.status(200).json("Unstake successful!");
         }
