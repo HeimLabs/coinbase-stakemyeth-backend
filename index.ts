@@ -2,7 +2,7 @@ import "dotenv/config";
 import middlewares from "./middlewares";
 import router from "./routes";
 import express from "express";
-import { coinbase } from "./services";
+import { coinbase, sanctioned } from "./services";
 
 const start = async () => {
     let app = express();
@@ -11,6 +11,8 @@ const start = async () => {
     app.use(router);
 
     coinbase.setupCoinbase();
+    await sanctioned.setupOFACSanctionList();
+    sanctioned.setupSanctionCron();
 
     app.listen(process.env.PORT || 5000, async () => {
         try {

@@ -2,10 +2,7 @@ import { NextFunction, Response } from "express";
 import AppError from "../utils/appError";
 import { Coinbase, ExternalAddress, StakeOptionsMode, StakingReward, StakingRewardFormat, Validator } from "@coinbase/coinbase-sdk";
 import { GetBalancesRequest, GetRewardsRequest, BuildTransactionRequest, GetValidatorsRequest, App_StakingReward, App_Validator } from "../types";
-import { CB_MODE, CHAIN_NETWORK, CHAIN_RPC } from "../config";
-import axios from "axios";
-
-// @todo - DEDICATED_STAKE_ACTIVE env setup
+import { CB_MODE, CHAIN_NETWORK } from "../config";
 
 export async function getBalances(req: GetBalancesRequest, res: Response, next: NextFunction) {
     try {
