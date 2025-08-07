@@ -120,7 +120,6 @@
     "./node_modules/@types/node/index.d.ts"
   ],
   "ts-node": {
-    "esm": true,
     "compilerOptions": {
       "module": "commonjs"
     }
