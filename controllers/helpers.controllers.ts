@@ -8,12 +8,19 @@ function errorHandler(
     next: NextFunction
 ) {
     if (err) {
+        // Check if headers have already been sent
+        if (res.headersSent) {
+            return;
+        }
+        
         let status = 200;
         if (err instanceof AppError) status = err.statusCode;
         else status = res.statusCode == 200 ? 500 : res.statusCode;
         const message = err?.message || "Something went wrong";
         res.status(status).json(message);
-    } else next();
+    } else {
+        next();
+    }
 }
 
 function healthCheck(_req: Request, res: Response) {

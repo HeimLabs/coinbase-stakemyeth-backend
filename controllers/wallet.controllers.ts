@@ -86,7 +86,7 @@ export async function getValidators(req: GetValidatorsRequest, res: Response, ne
     } catch (error) {
         console.error(`[controllers/wallet/getValidators] Failed to get validators`);
         console.error(error);
-        next(error);
+        return next(error);
     }
 }
 
@@ -116,7 +116,7 @@ export async function buildStakeTransactions(req: BuildTransactionRequest, res: 
     } catch (error) {
         console.error(`[controllers/wallet/buildStakeTransactions] Failed to build stake transactions`);
         console.error(error);
-        next(error);
+        return next(error);
     }
 }
 
@@ -164,7 +164,7 @@ export async function buildUnstakeTransactions(req: BuildTransactionRequest, res
         console.error(error);
         if (error.message)
             console.error(error.message);
-        next(error);
+        return next(error);
     }
 }
 
