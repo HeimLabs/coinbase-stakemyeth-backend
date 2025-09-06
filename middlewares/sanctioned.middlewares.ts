@@ -7,7 +7,7 @@ export const blockSanctioned = async (request: Request | any, response: Response
         const address = request.body.address || request.query.address;
 
         if (!address)
-            next();
+            return next();
 
         const sanctionedAddresses = await sanctioned.loadSanctionedAddresses();
         if (sanctionedAddresses.includes(address)) {
@@ -15,10 +15,10 @@ export const blockSanctioned = async (request: Request | any, response: Response
             return next(new AppError(403, "error", "This address is sanctioned and cannot be processed"));
         }
         
-        next();
+        return next();
     } catch (err) {
         console.error("[middleware/sanctioned] Sanction check failed");
         console.error(err);
-        next(new AppError(500, "error", "Internal server error during sanction check"));
+        return next(new AppError(500, "error", "Internal server error during sanction check"));
     }
 };

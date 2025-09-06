@@ -12,7 +12,7 @@ export const setupOFACSanctionList = async () => {
         const writer = fs.createWriteStream(SANCTIONED_FILE_PATH);
         response.data.pipe(writer);
         await new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
+            writer.on('finish', () => resolve(undefined));
             writer.on('error', reject);
         });
         console.log('[services/sanctioned/setupOFACSanctionList] Done');
