@@ -1,37 +1,69 @@
-# Coinbase MCP in ChatGPT
+# Coinbase for Agents MCP in ChatGPT
 
-This repository documents the supported ChatGPT connection path for Coinbase.
+This guide follows Coinbase's current official Coinbase MCP documentation.
 
-## Official endpoint
+## Official remote MCP endpoint
 
-- ChatGPT-specific Coinbase MCP endpoint: `https://agents.coinbase.com/mcp/chatgpt`
-- Authentication: Coinbase-hosted OAuth flow.
-- Official integration source: https://github.com/coinbase/agents
-- Coinbase MCP documentation: https://docs.cdp.coinbase.com/ai-agents/coinbase-for-agents/coinbase-mcp
+- Server URL: `https://agents.coinbase.com/mcp`
+- Authentication: OAuth
+- Official entry skill: https://coinbase.com/skill.md
+- Coinbase MCP setup guide: https://docs.cdp.coinbase.com/coinbase-for-agents/skill.md
+- Documentation index: https://docs.cdp.coinbase.com/llms.txt
 
-## Connect from ChatGPT
+Do not use the obsolete `/mcp/chatgpt` endpoint.
 
-Custom remote MCP connections are configured in ChatGPT on the web, not in this GitHub repository and not from the Android app:
+## Connect ChatGPT
 
-1. Open ChatGPT on the web.
-2. Open **Settings → Apps** (or **Plugins**, depending on the available interface).
-3. Choose **Add custom MCP server**.
+Set up the connection in ChatGPT on the web. Once connected, it should also be available in the desktop and mobile apps.
+
+1. Open ChatGPT web.
+2. Open **Plugins** in the side navigation.
+3. Click **Add** → **Add Custom MCP Server**.
 4. Name it **Coinbase**.
-5. Enter `https://agents.coinbase.com/mcp/chatgpt`.
-6. Complete Coinbase's OAuth authorization and review the tools exposed.
-7. Test with read-only requests first, such as listing portfolios or supported networks.
+5. Set Server URL to `https://agents.coinbase.com/mcp`.
+6. Leave Authentication set to **OAuth**.
+7. Check the acknowledgement and create the plugin.
+8. Sign in to Coinbase and select only the portfolio(s) this agent should access.
+9. Verify access with a read-only request, such as listing portfolios.
 
-Availability is plan- and workspace-dependent. ChatGPT's current Help Center says custom MCP connections are available on Business and Enterprise/Edu web workspaces, while Pro supports read/fetch custom MCP connections. Workspace administrators may restrict creation.
+If **Add Custom MCP Server** is unavailable, check ChatGPT Settings for Developer Mode and confirm that the account plan and workspace policy allow custom MCP connections. Workspace administrators can restrict this capability.
 
-## Security and scope
+## Portfolio isolation
 
-- Do not store seed phrases, private keys, OAuth refresh tokens, or CDP key files in this repository.
-- Use OAuth for the hosted MCP endpoint; do not paste secrets into chat, source files, issues, or commits.
-- Begin with read-only discovery. Review each exposed write action and its permission prompts before enabling it.
-- Never grant blanket token approvals. For ERC-20 approvals, use verified spender addresses and the minimum required allowance, and revoke allowances that are no longer needed.
-- Wallet transfers, trading, signing, and other irreversible financial actions must remain user-authorized and policy-compliant.
-- A successful GitHub commit does not install or authorize a ChatGPT app.
+Create a separate Coinbase Advanced Spot portfolio for the agent and fund it only with the amount intended for agent use. Select that portfolio during OAuth approval. Portfolio creation is available on the Coinbase website, not the mobile app.
 
-## Integration status
+Official portfolio page: https://www.coinbase.com/advanced-portfolio/spot
 
-This file is setup documentation only. It does not create a Coinbase OAuth grant, install a ChatGPT app, connect a wallet, import contract addresses, or execute blockchain transactions. Those steps require the user's ChatGPT workspace permissions and Coinbase OAuth consent.
+## Supported capabilities
+
+Depending on account eligibility, OAuth scopes, client approval, and tools exposed by the connection, Coinbase for Agents can provide:
+
+- Spot crypto trading
+- Eligible US derivatives and equities
+- Portfolio and balance reads
+- Portfolio management and transfers between portfolios
+- Order preview, placement, listing, editing, and cancellation
+- x402 paid data access through the core remote MCP
+
+The dedicated ChatGPT trading integration does not expose x402 tools, according to Coinbase's documentation. Never assume a tool is available until confirmed by the connected server's `tools/list`.
+
+## Safe operating procedure
+
+- Start with read-only portfolio and balance discovery.
+- Review the portfolio selected at OAuth approval; do not grant access to every portfolio by default.
+- Treat trading, transfers, conversions, and paid x402 fetches as separate financial actions requiring explicit user authorization.
+- Set a strict x402 budget before any paid fetch. Coinbase documents a maximum of 5 USDC per payment; an instruction in chat is not a server-enforced session budget.
+- Use idempotency keys for x402 payments and do not blindly retry uncertain payment outcomes.
+- Do not grant blanket smart-contract token allowances. Coinbase MCP trading permissions are not the same as EVM/Solana wallet contract approvals.
+- For onchain contract interactions, verify chain, contract address, source, spender, and exact allowance independently.
+- Never store seed phrases, private keys, OAuth tokens, or CDP key files in this repository or chat.
+
+## Local CLI alternative
+
+Coinbase documents a local CLI for supported coding-agent workflows. It requires Node.js 22+ and a CDP API key. Do not create or commit API key files in this repository. Use the official setup guide and a secure local secret store if the CLI is explicitly needed.
+
+Official guide: https://docs.cdp.coinbase.com/coinbase-for-agents/skill.md
+
+## What this repository change does not do
+
+A GitHub documentation commit does not install the Coinbase MCP connection in ChatGPT, complete OAuth, select portfolios, grant account scopes, import blockchain token contracts, or execute trades or transactions. Those actions require the user's ChatGPT web settings and explicit Coinbase authorization.
