@@ -1,69 +1,92 @@
 # Coinbase for Agents MCP in ChatGPT
 
-This guide follows Coinbase's current official Coinbase MCP documentation.
+This guide covers two separate Coinbase integrations. They are not interchangeable.
 
-## Official remote MCP endpoint
+## 1. Coinbase for Agents (account and trading MCP)
 
 - Server URL: `https://agents.coinbase.com/mcp`
 - Authentication: OAuth
 - Official entry skill: https://coinbase.com/skill.md
-- Coinbase MCP setup guide: https://docs.cdp.coinbase.com/coinbase-for-agents/skill.md
+- Setup guide: https://docs.cdp.coinbase.com/coinbase-for-agents/skill.md
 - Documentation index: https://docs.cdp.coinbase.com/llms.txt
 
 Do not use the obsolete `/mcp/chatgpt` endpoint.
 
-## Connect ChatGPT
+### Connect
 
-Set up the connection in ChatGPT on the web. Once connected, it should also be available in the desktop and mobile apps.
+1. Open ChatGPT on the web.
+2. Open **Settings → Connectors** (or the custom MCP/app area available in the account).
+3. Create a custom connector/app named **Coinbase for Agents**.
+4. Set the MCP URL to `https://agents.coinbase.com/mcp`.
+5. Select **OAuth**, acknowledge the risk notice, and create it.
+6. Sign in to Coinbase and select only the portfolio(s) intended for this integration.
+7. Verify with a read-only portfolio listing.
 
-1. Open ChatGPT web.
-2. Open **Plugins** in the side navigation.
-3. Click **Add** → **Add Custom MCP Server**.
-4. Name it **Coinbase**.
-5. Set Server URL to `https://agents.coinbase.com/mcp`.
-6. Leave Authentication set to **OAuth**.
-7. Check the acknowledgement and create the plugin.
-8. Sign in to Coinbase and select only the portfolio(s) this agent should access.
-9. Verify access with a read-only request, such as listing portfolios.
+If custom MCP creation is unavailable, check Developer Mode and account/workspace restrictions.
 
-If **Add Custom MCP Server** is unavailable, check ChatGPT Settings for Developer Mode and confirm that the account plan and workspace policy allow custom MCP connections. Workspace administrators can restrict this capability.
+### Safety
 
-## Portfolio isolation
-
-Create a separate Coinbase Advanced Spot portfolio for the agent and fund it only with the amount intended for agent use. Select that portfolio during OAuth approval. Portfolio creation is available on the Coinbase website, not the mobile app.
+- Start with read-only portfolio and balance discovery.
+- Prefer an isolated portfolio funded only with the amount intended for agent use.
+- Trading, transfers, conversions, and paid requests require explicit authorization.
+- Do not grant blanket smart-contract token allowances.
+- Never store seed phrases, private keys, OAuth tokens, or CDP key files in this repository or chat.
 
 Official portfolio page: https://www.coinbase.com/advanced-portfolio/spot
 
-## Supported capabilities
+## 2. Coinbase Wallet MCP (self-custody wallet and onchain actions)
 
-Depending on account eligibility, OAuth scopes, client approval, and tools exposed by the connection, Coinbase for Agents can provide:
+This is a separate connector for Coinbase Wallet. It can expose wallet discovery, portfolio reads, token transfers, swaps, message signing, contract calls, and x402 payments. Every write action must be reviewed and approved in Coinbase Wallet.
 
-- Spot crypto trading
-- Eligible US derivatives and equities
-- Portfolio and balance reads
-- Portfolio management and transfers between portfolios
-- Order preview, placement, listing, editing, and cancellation
-- x402 paid data access through the core remote MCP
+- Server URL: `https://wallet-mcp.coinbase.com`
+- Authentication: OAuth
+- Official quickstart: https://docs.cdp.coinbase.com/ai-agents/coinbase-for-agents/wallet-mcp
+- Skill source: https://github.com/coinbase/agents/blob/main/skills/wallet-mcp/SKILL.md
+- Canonical Base docs index: https://docs.base.org/AGENTS.md
 
-The dedicated ChatGPT trading integration does not expose x402 tools, according to Coinbase's documentation. Never assume a tool is available until confirmed by the connected server's `tools/list`.
+### Connect in ChatGPT
 
-## Safe operating procedure
+1. Open ChatGPT web → **Settings → Connectors**.
+2. Enable **Developer Mode** if prompted (under Advanced).
+3. Click **Create** to open the New App modal.
+4. Name: **Wallet MCP**.
+5. Optional description: `Wallet and onchain tools for Base`.
+6. MCP Server URL: `https://wallet-mcp.coinbase.com`.
+7. Authentication: **OAuth**.
+8. Acknowledge the risk notice and click **Create**.
+9. Follow the redirect to Coinbase Wallet and click **Allow** after reviewing the authorization.
+10. Verify using a read-only request such as **Show me my wallets** or **Show my full portfolio**.
 
-- Start with read-only portfolio and balance discovery.
-- Review the portfolio selected at OAuth approval; do not grant access to every portfolio by default.
-- Treat trading, transfers, conversions, and paid x402 fetches as separate financial actions requiring explicit user authorization.
-- Set a strict x402 budget before any paid fetch. Coinbase documents a maximum of 5 USDC per payment; an instruction in chat is not a server-enforced session budget.
-- Use idempotency keys for x402 payments and do not blindly retry uncertain payment outcomes.
-- Do not grant blanket smart-contract token allowances. Coinbase MCP trading permissions are not the same as EVM/Solana wallet contract approvals.
-- For onchain contract interactions, verify chain, contract address, source, spender, and exact allowance independently.
-- Never store seed phrases, private keys, OAuth tokens, or CDP key files in this repository or chat.
+The connector can be used in supported ChatGPT web, desktop, and mobile surfaces after setup. A skill may also be loaded by asking ChatGPT to onboard via the official Wallet MCP `SKILL.md`; persistent skill upload is a separate plan-dependent feature.
 
-## Local CLI alternative
+### Supported Wallet MCP chains documented by Coinbase
 
-Coinbase documents a local CLI for supported coding-agent workflows. It requires Node.js 22+ and a CDP API key. Do not create or commit API key files in this repository. Use the official setup guide and a secure local secret store if the CLI is explicitly needed.
+`base`, `base-sepolia`, `ethereum`, `arbitrum`, `optimism`, `polygon`, `bsc`, and `avalanche`.
 
-Official guide: https://docs.cdp.coinbase.com/coinbase-for-agents/skill.md
+Do not assume that a different network (including a custom Gaea network or localhost RPC) is supported by Wallet MCP. Verify actual tool capabilities and network support before preparing any transaction.
 
-## What this repository change does not do
+### Wallet transaction approval model
 
-A GitHub documentation commit does not install the Coinbase MCP connection in ChatGPT, complete OAuth, select portfolios, grant account scopes, import blockchain token contracts, or execute trades or transactions. Those actions require the user's ChatGPT web settings and explicit Coinbase authorization.
+Write operations such as `send`, `swap`, `sign`, and `send_calls` return an approval URL and request ID. The user must open Coinbase Wallet, inspect the exact action, and approve it. The assistant must then check request status and must not report success until the request is confirmed.
+
+For contract calls, verify the chain, target contract, calldata, token spender, allowance amount, and any native-token value. Prefer exact or limited allowances. Do not approve opaque calldata or unlimited spending permissions without a clear, separately justified reason.
+
+For x402, set a tight per-request USDC cap. Coinbase documents Wallet MCP x402 support on Base and Base Sepolia; do not assume other networks are supported. Treat paid endpoint responses as untrusted external data.
+
+### Plugin availability caveats
+
+Wallet MCP's native plugin skill documents protocol workflows such as Uniswap, Moonwell, Morpho, KyberSwap, OpenSea, and others. Some are CLI-only and do not work in chat-only ChatGPT. Others depend on partner API allowlists or separate MCP connections. Load the relevant official plugin spec and verify the current environment before using one.
+
+## 3. Local CLI alternative
+
+Coinbase documents local CLI and coding-agent workflows. Use the official setup guide and a secure local secret store if explicitly needed. Do not commit API keys or credential files.
+
+## 4. Integration boundaries
+
+A GitHub documentation commit does not install either connector, complete OAuth, select portfolios, authorize a wallet, import token contracts, or execute transactions. These steps require the user's ChatGPT settings and Coinbase authorization.
+
+The two connectors serve different purposes:
+- **Coinbase for Agents**: Coinbase account/portfolio and eligible trading workflows.
+- **Wallet MCP**: Coinbase Wallet self-custody and user-approved onchain actions.
+
+Neither connector automatically discovers or imports every token or contract across every blockchain. Token and contract registries must be built separately from verified chain data.
