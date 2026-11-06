@@ -1,0 +1,263 @@
+# This workflow will build and push a node.js application to an Azure Web App when a commit is pushed to your default branch.
+#
+# This workflow assumes you have already created the target Azure App Service web app.
+# For instructions see https://docs.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=linux&pivots=development-environment-cli
+#
+# To configure this workflow:
+#
+# 1. Download the Publish Profile for your Azure Web App. You can download this file from the Overview page of your Web App in the Azure Portal.
+#    For more information: https://docs.microsoft.com/en-us/azure/app-service/deploy-github-actions?tabs=applevel#generate-deployment-credentials
+#
+# 2. Create a secret in your repository named AZURE_WEBAPP_PUBLISH_PROFILE, paste the publish profile contents as the value of the secret.
+#    For instructions on obtaining the publish profile see: https://docs.microsoft.com/azure/app-service/deploy-github-actions#configure-the-github-secret
+#
+# 3. Change the value for the AZURE_WEBAPP_NAME. Optionally, change the AZURE_WEBAPP_PACKAGE_PATH and NODE_VERSION environment variables below.
+#
+# For more information on GitHub Actions for Azure: https://github.com/Azure/Actions
+# For more information on the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# For more samples to get started with GitHub Action workflows to deploy to Azure: https://github.com/Azure/actions-workflow-samples
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: your-app-name    # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '20.x'                # set this to the node version to use
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: npm install, build, and test
+      run: |
+        npm install
+        npm run build --if-present
+        npm run test --if-present
+
+    - name: Upload artifact for deployment job
+      uses: actions/upload-artifact@v4
+      with:
+        name: node-app
+        path: .
+
+  deploy:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Development'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v4
+      with:
+        name: node-app
+
+    - name: 'Deploy to Azure WebApp'
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+- name: Node CI Action
+  # You may pin to the exact commit or the version.
+  # uses: arensis/node-ci-action@f6a745e1f9c21356d06ee4c13599b1e6d209f85d
+  uses: arensis/node-ci-action@v1.0.3
+  with:
+    # Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0.
+    node-version: # optional, default is 20.x
+    # Used to specify a package manager for caching in the default directory. Supported values: npm, yarn, pnpm.
+    cache: # optional, default is npm- name: install node modules
+  # You may pin to the exact commit or the version.
+  # uses: tecolicom/actions-install-node-modules@91b30a16887b3cbb6b9ff0f2db1b871e9394e4a5
+  uses: tecolicom/actions-install-node-modules@v1.2
+  with:
+    # 
+    root: # optional, default is .
+    # 
+    cache: # optional, default is true
+    # 
+    key: # optional- name: Hello Setup Node
+  # You may pin to the exact commit or the version.
+  # uses: jamirandac/setup-node-2@a617c6f981aab5e49e36305b02b5032f6514ab19
+  uses: jamirandac/setup-node-2@v1.0.0- name: docker-node-yarn
+  # You may pin to the exact commit or the version.
+  # uses: nexys-system/gh-actions-docker-node@7a1320904dd536f786cb6d5fc0741b7a30440c73
+  uses: nexys-system/gh-actions-docker-node@v0.0.1
+  with:
+    # github token
+    githubtoken: # optional, default is ${{ github.token }}
+    # node version
+    nodeversion: # optional, default is 18
+    # name of the container
+    container-name: # optional, default is ${{ github.event.repository.name }}
+    # build command
+    build-command: # optional, default is yarn build
+    # The message to prepend the review suggestion
+    message: # optional- name: nodejsscan-ng
+  # You may pin to the exact commit or the version.
+  # uses: Harvester57/njsscan-action@35833771119af7aca9a7e1418f6db046c4598d45
+  uses: Harvester57/njsscan-action@v1.0.0-beta16
+  with:
+    # positional arguments:
+  path                  Path can be file(s) or directories with source code
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --json                set output format as JSON
+  --sarif               set output format as SARIF 2.1.0
+  --sonarqube           set output format compatible with SonarQube
+  -o OUTPUT, --output OUTPUT
+                        output filename to save the result
+  --missing-controls    enable missing security controls check
+  -w, --exit-warning    non zero exit code on warning
+  -v, --version         show njsscan version
+
+    args: - name: GitHub Action Node Version
+  # You may pin to the exact commit or the version.
+  # uses: bendrucker/github-action-node-version@2b4cda19381b8015197f9a3eff1ec934716241da
+  uses: bendrucker/github-action-node-version@v1.0.0
+  with:
+    # Path to the action.yml file
+    path: # default is ./action.yml- name: Setup NodeJS environment with a Cache
+  # You may pin to the exact commit or the version.
+  # uses: gacts/setup-node-with-cache@624bb72adfed6b190561a8544d80f789135e462d
+  uses: gacts/setup-node-with-cache@v1.2.2
+  with:
+    # The Node version to download (if necessary) and use. Supports semver spec and ranges
+    node-version: # optional
+    # File containing the version Spec of the version to use. Examples - `.nvmrc`, `.node-version`, `.tool-versions`
+    node-version-file: # optional
+    # Optional registry to set up for auth. Will set the registry in a project level `.npmrc` and `.yarnrc` file, and set up auth to read in from `env.NODE_AUTH_TOKEN`
+    registry-url: # optional
+    # Optional cache key suffix
+    cache-key-suffix: # optional, default is - name: Environment settings interface
+  # You may pin to the exact commit or the version.
+  # uses: cloudposse/github-action-interface-environment@aa4a2d6c165db3f2cd84533e8ab538d745dc4e59
+  uses: cloudposse/github-action-interface-environment@0.4.0
+  with:
+    # Repository with Environment action implementation
+    implementation_repository: 
+    # Repository path with Environment action implementation
+    implementation_path: # default is 
+    # Repository filename with Environment action implementation
+    implementation_file: # default is action.yaml
+    # Ref of environment action implementation
+    implementation_ref: # default is main
+    # GitHub PAT allow fetch environment action implementation
+    implementation_github_pat: 
+    # Environment name
+    environment: 
+    # Namespace name
+    namespace: 
+    # Repository name
+    repository: # optional
+    # Application name
+    application: # optional
+    # Comma separated attributes
+    attributes: # optional- name: Run RapiseLauncher on Windows
+  # You may pin to the exact commit or the version.
+  # uses: Inflectra/rapiselauncher-win-action@5573f637be026d339e2c49d341dcf4c08e3137a9
+  uses: Inflectra/rapiselauncher-win-action@v2.0.3
+  with:
+    # Path to existing RepositoryConnection.xml config file. When provided, spira_url/spira_username/spira_api_key/spira_automation_host are not needed.
+    spira_config: # optional, default is 
+    # Spira server URL. Short form: https://server/ (requires spira_project_id and spira_test_set_id). Full form: https://server/9/TestSet/925.aspx (project_id and test_set_id extracted automatically).
+    spira_url: # default is https://myserver.spiraservice.net/
+    # Spira username. Not needed if spira_config is set.
+    spira_username: # default is myuser
+    # Spira API key (RSS Token). Not needed if spira_config is set.
+    spira_api_key: # default is {00000000-0000-0000-0000-000000000000}
+    # Spira Product/Project ID. Optional.
+    spira_project_id: # optional, default is 
+    # Spira Test Set ID. May be an array, i.e. "1,3,15" to execute several test sets. Not needed if spira_url contains the full test set path.
+    spira_test_set_id: # default is 
+    # Automation Host Token defined for a given project
+    spira_automation_host: # default is GHA
+    # Whether Rapise needs to be installed
+    install_rapise: # optional, default is true
+    # Rapise version to install
+    rapise_version: # optional, default is 9.0.35.37
+    # Set screen resolution for test execution
+    set_screen_size: # optional, default is false
+    # Screen width (1024..7680)
+    screen_width: # optional, default is 1920
+    # Screen height (768..4320)
+    screen_height: # optional, default is 1080
+    # Record video of execution and upload to Spira Test Run
+    record_video: # optional, default is false
+    # Video recording options
+    record_video_options: # optional, default is -noaudio -bitRate 512 -frameRate 2
+    # Capture screenshots before and after test execution
+    capture_screenshots: # optional, default is true
+    # Upload artifacts (screenshots, logs, trp/tap files) after execution
+    upload_artifacts: # optional, default is true
+    # Timeout in minutes for RapiseLauncher execution. 0 means no timeout.
+    timeout_minutes: # optional, default is 0
+    # Path to Git project (for Spira tests stored in Git)
+    git_root: # optional, default is 
+    # Path to file for JUnit XML results output
+    report: # optional, default is rapise-test-results.xml- name: Code Engine GitHub Action
+  # You may pin to the exact commit or the version.
+  # uses: IBM/code-engine-github-action@397f52bce0731f3c134a3d6ad0d2d8c0f1867a01
+  uses: IBM/code-engine-github-action@v1.3.1
+  with:
+    # IAM API Key used to log into the IBM Cloud
+    api-key: 
+    # An IBM Cloud Resource Group is a logical container used to organize and manage related cloud resources
+    resource-group: # optional
+    # The Region refers to a geographical area where the project is are located
+    region: 
+    # A Code Engine Project Is the grouping of your Apps, Functions and Jobs
+    project: 
+    # The type of component that should be deployed [App, Function, Job, Build]
+    component: 
+    # Name of the App, Function, Job or build
+    name: 
+    # Runtime used for the Function only required for function
+    runtime: # optional
+    # Name of the image that is used for this application
+    image: # optional
+    # Name of the registry secret used to authenticate against the Container registry
+    registry-secret: # optional
+    # Port of the Application
+    port: # optional
+    # Enable trusted profiles
+    trusted-profiles: # optional
+    # path to the directory containing the source code
+    build-source: # optional, default is .
+    # strategy used for building the image ['dockerfile', 'buildpacks']
+    build-strategy: # optional, default is buildpacks
+    # The size to use for the build, which determines the amount of resources used. Valid values include small, medium, large, xlarge, and xxlarge.
+    build-size: # optional, default is medium
+    # CPU configuration set for the component. If not set default Code Engine values are used.
+    cpu: # optional
+    # Memory configuration set for the component. If not set default Code Engine values are used.
+    memory: # optional- name: ServiceNow CI/CD Batch Install
+  # You may pin to the exact commit or the version.
+  # uses: ServiceNow/sncicd-batch-install@cd0fe0c6cf7d8bf5baab47c8de34f98540b67a9d
+  uses: ServiceNow/sncicd-batch-install@2.0.1
+  with:
+    # Source of the payload(file/workflow)
+    source: 
+    # Filename(or a path without trailing slash) of the manifest JSON file is source equals to file(Default: now_batch_manifest.json)
+    filename: # optional
+    # JSON string with payload if source equals to workflow
+    manifest: # optional
